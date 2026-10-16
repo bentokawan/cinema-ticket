@@ -29,7 +29,7 @@ onMounted(async () => {
     
     <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <RouterLink 
-        v-for="movie in movies" 
+        v-for="movie in movies"
         :key="movie.id" 
         :to="`/movies/${movie.id}`"
         class="group bg-[#1A1D27] overflow-hidden hover:ring-2 hover:ring-red-500 transition-all duration-300"
