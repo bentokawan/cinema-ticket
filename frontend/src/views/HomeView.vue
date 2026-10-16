@@ -65,7 +65,6 @@ const selectMovie = (movie: any) => {
             <p class="text-xs text-gray-400 mt-1">{{ movie.genre }}</p>
           </div>
 
-          <!-- Deskripsi Jadwal Tayang (Tanpa Perlu Memilih) -->
           <div class="bg-[#0F1117] p-3 rounded-xl border border-white/5 space-y-1 text-xs text-gray-300">
             <span class="text-[11px] text-gray-400 uppercase tracking-wider block font-semibold">Jadwal Penayangan:</span>
             <div v-if="movie.showtime" class="space-y-0.5">
@@ -79,7 +78,6 @@ const selectMovie = (movie: any) => {
             <div v-else class="text-gray-500 italic">Jadwal belum tersedia</div>
           </div>
 
-          <!-- Tombol Pilih Movie -->
           <button 
             @click="selectMovie(movie)"
             :disabled="!movie.showtime"

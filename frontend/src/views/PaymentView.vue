@@ -29,7 +29,6 @@ const submitPayment = async () => {
   error.value = ''
 
   try {
-    // 1. Buat pesanan (hold kursi)
     const orderPayload = {
       showtime_id: store.showtime.id,
       seat_ids: store.selectedSeatIds,
@@ -40,16 +39,12 @@ const submitPayment = async () => {
     const createRes = await api.post('/orders/', orderPayload)
     const orderId = createRes.data.id
 
-    // 2. Eksekusi pembayaran langsung
     await api.post(`/orders/${orderId}/pay`, {
       method: selectedMethod.value
     })
-
-    // 3. Ambil data order final untuk bukti konfirmasi
     const finalRes = await api.get(`/orders/${orderId}`)
     successOrder.value = finalRes.data
 
-    // Reset store
     store.resetBooking()
   } catch (e: any) {
     if (e.response?.status === 409) {
@@ -72,7 +67,6 @@ const handleReset = () => {
 
 <template>
   <div class="max-w-3xl mx-auto py-6">
-    <!-- State 1: Konfirmasi Berhasil -->
     <div v-if="successOrder" class="bg-[#1A1D27] p-8 rounded-2xl border border-white/10 space-y-6 text-center">
       <div class="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto border border-green-500/30">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +121,6 @@ const handleReset = () => {
       </button>
     </div>
 
-    <!-- State 2: Form Pembayaran (QRIS & BCA) -->
     <div v-else-if="store.movie" class="space-y-6">
       <div class="flex items-center gap-2 border-b border-white/10 pb-4">
         <button 
@@ -144,9 +137,7 @@ const handleReset = () => {
       </div>
 
       <form @submit.prevent="submitPayment" class="grid md:grid-cols-5 gap-6">
-        <!-- Form Pemesan & Pilihan Bayar (3 Kolom) -->
         <div class="md:col-span-3 space-y-6">
-          <!-- Data Pemesan -->
           <div class="bg-[#1A1D27] p-6 rounded-2xl border border-white/5 space-y-4">
             <h2 class="text-base font-semibold text-white">Data Pemesan</h2>
             
@@ -188,12 +179,10 @@ const handleReset = () => {
             </div>
           </div>
 
-          <!-- Pilihan Metode Pembayaran (Hanya QRIS & BCA) -->
           <div class="bg-[#1A1D27] p-6 rounded-2xl border border-white/5 space-y-3">
             <h2 class="text-base font-semibold text-white">Metode Pembayaran</h2>
 
             <div class="space-y-3">
-              <!-- QRIS -->
               <label 
                 class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all"
                 :class="selectedMethod === 'qris' ? 'bg-red-600/10 border-red-500 text-white' : 'bg-[#0F1117] border-white/10 text-gray-300 hover:border-white/20'"
@@ -208,7 +197,6 @@ const handleReset = () => {
                 <span class="text-xs font-semibold bg-white/10 px-2.5 py-1 rounded text-gray-300">Instan</span>
               </label>
 
-              <!-- BCA -->
               <label 
                 class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all"
                 :class="selectedMethod === 'bca' ? 'bg-red-600/10 border-red-500 text-white' : 'bg-[#0F1117] border-white/10 text-gray-300 hover:border-white/20'"
@@ -225,8 +213,7 @@ const handleReset = () => {
             </div>
           </div>
         </div>
-
-        <!-- Ringkasan & Tombol Bayar (2 Kolom) -->
+        
         <div class="md:col-span-2 space-y-4">
           <div class="bg-[#1A1D27] p-5 rounded-2xl border border-white/5 space-y-4 sticky top-24">
             <h3 class="font-semibold text-base border-b border-white/10 pb-3">Ringkasan Tiket</h3>

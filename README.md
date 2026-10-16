@@ -1,66 +1,71 @@
-# Cinema Ticket Booking Application
+# Cinema Ticket Booking System
 
-Aplikasi pemesanan tiket bioskop berbasis web dengan backend FastAPI dan frontend Vue 3.
+Aplikasi pemesanan tiket bioskop sederhana dengan fokus pada validasi data dan penanganan *concurrency* di sisi backend.
 
-## Tech Stack
-
-- **Backend**: Python 3.12, FastAPI, SQLAlchemy 2.0, PostgreSQL (Supabase)
-- **Frontend**: Vue 3 (Composition API), Vite, Pinia, Vue Router, TailwindCSS
+- **Backend**: FastAPI, SQLAlchemy 2.0, PostgreSQL (Supabase Cloud)
+- **Frontend**: Vue 3, Vite, TailwindCSS
 
 ---
 
-## Alur Pemesanan (User Flow)
+## Substansi Teknis & Concurrency
 
-Sistem dirancang dengan alur yang ringkas dan intuitif:
-1. **Pilih Film**: Memilih film yang sedang aktif tayang dan menentukan jadwal tayang (studio, tanggal, jam).
-2. **Pilih Kursi**: Memilih kursi pada grid studio yang terhubung langsung dengan ketersediaan kursi di database.
-3. **Pembayaran**: Mengisi data pemesan singkat dan memilih metode pembayaran (Transfer Bank, E-Wallet, Kartu). Setelah dikonfirmasi, sistem langsung menerbitkan kode booking resmi.
+Tantangan utama sistem pemesanan tiket adalah mencegah **double-booking** (dua pengguna memesan kursi yang sama secara bersamaan). Sistem ini menanganinya melalui:
 
----
-
-## Concurrency & Data Consistency
-
-Untuk mencegah *double-booking* kursi ketika beberapa pengguna memesan kursi yang sama secara bersamaan:
-1. **Database Constraint**: Tabel `order_items` menerapkan constraint unik gabungan `(showtime_id, seat_id)`.
-2. **Atomic Transaction**: Jika terjadi konflik pesanan pada kursi yang sama, transaksi di-rollback dan API merespons dengan HTTP `409 Conflict`.
-3. **Holding Time**: Kursi di-hold saat pembuatan order dan otomatis kadaluarsa jika tidak dibayar dalam batas waktu yang ditentukan.
+1. **Database Constraint**:  
+   Tabel `order_items` menerapkan `UniqueConstraint("showtime_id", "seat_id")`.
+2. **Atomic Rollback & Status 409**:  
+   Jika terjadi bentrokan saat transaksi disimpan, database menolak operasi tersebut dan FastAPI me-rollback transaksi lalu mengembalikan status `HTTP 409 Conflict`.
+3. **Mekanisme Hold Timeout (10 Menit)**:  
+   Ketika order dibuat, status order adalah `pending` selama 10 menit. Jika tidak diselesaikan pembayarannya, kursi otomatis dirilis kembali untuk penonton lain.
 
 ---
 
 ## Cara Menjalankan
 
-### 1. Backend
+> **Catatan Database**: Proyek ini sudah terhubung ke database **PostgreSQL di Supabase Cloud**. Anda **tidak perlu menginstall atau membuat database PostgreSQL lokal**.
+
+### 1. Jalankan Backend
 
 ```bash
 cd backend
-python -m venv venv
 
-# Aktivasi virtual environment (Windows)
-.\venv\Scripts\activate
+# Buat & aktifkan virtual environment (opsional tapi direkomendasikan)
+python -m venv venv
+.\venv\Scripts\activate   # Windows
+# source venv/bin/activate # Linux/macOS
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Jalankan server
+# Pastikan file .env ada (sudah disediakan default koneksi Supabase)
+# Jika belum ada, salin dari .env.example:
+cp .env.example .env
+
+# Jalankan server API
 uvicorn app.main:app --reload --port 8000
 ```
-API docs tersedia di `http://localhost:8000/docs`.
-
-### 2. Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Aplikasi dapat diakses di browser melalui `http://localhost:5173/` (atau `http://localhost:5174/`).
+API docs (Swagger) aktif di `http://localhost:8000/docs`.
 
 ---
 
-## Endpoint API Utama
+### 2. Jalankan Frontend
 
-- `GET /api/movies/`: Daftar film yang aktif.
-- `GET /api/movies/{id}`: Detail film beserta jadwal tayang.
-- `GET /api/showtimes/{id}/seats`: Layout kursi dan status kursi (`available` / `taken`).
-- `POST /api/orders/`: Membuat pesanan dan menahan kursi.
-- `POST /api/orders/{id}/pay`: Memproses pembayaran order.
+```bash
+cd frontend
+
+# Install dependencies & jalankan dev server
+npm install
+npm run dev
+```
+Buka browser di `http://localhost:5173/` (atau `http://localhost:5174/`).
+
+---
+
+## Endpoint API
+
+| Method | Endpoint | Fungsi |
+|---|---|---|
+| `GET` | `/api/movies/` | Mengambil daftar film aktif beserta jadwal penayangan |
+| `GET` | `/api/showtimes/{id}/seats` | Mengambil 5 kursi studio beserta status (`available` / `taken`) |
+| `POST` | `/api/orders/` | Membuat pesanan baru & menahan kursi (hold) |
+| `POST` | `/api/orders/{id}/pay` | Eksekusi pembayaran (`qris` / `bca`) |
