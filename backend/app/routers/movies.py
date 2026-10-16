@@ -8,7 +8,24 @@ router = APIRouter(prefix="/api/movies", tags=["movies"])
 @router.get("/")
 def get_movies(db: Session = Depends(get_db)):
     movies = db.query(m.Movie).filter(m.Movie.is_active == True).all()
-    return movies
+    return [
+        {
+            "id": movie.id,
+            "title": movie.title,
+            "duration_minutes": movie.duration_minutes,
+            "poster_url": movie.poster_url,
+            "showtimes": [
+                {
+                    "id": s.id,
+                    "start_time": s.start_time.isoformat() if s.start_time else None,
+                    "price": s.price,
+                    "studio": s.studio.name if s.studio else ""
+                }
+                for s in sorted(movie.showtimes, key=lambda x: x.start_time)
+            ]
+        }
+        for movie in movies
+    ]
 
 @router.get("/{movie_id}")
 def get_movie_detail(movie_id: int, db: Session = Depends(get_db)):
