@@ -1,158 +1,66 @@
-# 🎬 CinemaGo — Cinema Ticket Booking System
+# Cinema Ticket Booking Application
 
-Aplikasi pemesanan tiket bioskop modern berbasis fullstack dengan antarmuka web interaktif, sistem pemilihan kursi real-time, mekanisme holding kursi (concurrency & race condition prevention), alur pembayaran multi-channel, dan penerbitan e-ticket digital.
+Aplikasi pemesanan tiket bioskop berbasis web dengan backend FastAPI dan frontend Vue 3.
 
----
+## Tech Stack
 
-## 🛠️ Tech Stack
-
-### Backend
-- **Framework**: FastAPI (Python 3.12)
-- **Database ORM**: SQLAlchemy 2.0 (Declarative Mapping)
-- **Database**: PostgreSQL (Cloud Hosted on Supabase)
-- **Data Validation**: Pydantic v2
-- **Server**: Uvicorn ASGI
-
-### Frontend
-- **Framework**: Vue 3 (Composition API `<script setup lang="ts">`)
-- **State Management**: Pinia Store
-- **Routing**: Vue Router 4
-- **Styling**: TailwindCSS & Custom Glassmorphic Dark UI
-- **HTTP Client**: Axios
-- **Bundler**: Vite
+- **Backend**: Python 3.12, FastAPI, SQLAlchemy 2.0, PostgreSQL (Supabase)
+- **Frontend**: Vue 3 (Composition API), Vite, Pinia, Vue Router, TailwindCSS
 
 ---
 
-## 📐 Arsitektur & Alur Pemesanan (Flow)
+## Alur Pemesanan (User Flow)
 
-```
-[1. HomeView]
-   └─ Sedang Tayang (Daftar film aktif)
-         │
-         ▼
-[2. MovieDetailView]
-   └─ Detail Film & Pilih Jadwal Tayang (Studio, Tanggal, Jam)
-         │
-         ▼
-[3. SeatSelectionView]
-   └─ Interactive Seat Grid (Tersedia, Dipilih, Terisi) Maks. 6 Kursi
-         │
-         ▼
-[4. CheckoutView]
-   └─ Input Identitas Pemesan (Nama, Email, No HP)
-   └─ POST /api/orders/ ──▶ Status: Pending, Hold Kursi 10 Menit
-         │
-         ▼
-[5. OrderView]
-   └─ Ringkasan Order & Countdown Timer (10 menit)
-   └─ Opsi Batalkan Pesanan (DELETE /api/orders/{id})
-         │
-         ▼
-[6. PaymentView]
-   └─ Pilih Metode: Virtual Account, E-Wallet / QRIS, Kartu Kredit
-   └─ POST /api/orders/{id}/pay ──▶ Status: Paid
-         │
-         ▼
-[7. SuccessView]
-   └─ E-Ticket Bioskop Resmi (Kode Booking, Barcode, Detail Kursi, Cetak Tiket)
-```
-
-### 🔒 Concurrency & Anti Race Condition
-1. **Database Unique Constraint**:
-   Tabel `order_items` memiliki `UniqueConstraint("showtime_id", "seat_id")`. Dua pengguna yang mencoba memesan kursi yang sama secara bersamaan tidak akan pernah menduplikasi kursi karena database level lock / rollback dengan status `409 Conflict`.
-2. **Hold Timeout (10 Menit)**:
-   Saat order dibuat, order masuk status `pending` dengan waktu kadaluarsa `expires_at = now + 10 menit`. Fungsi `expire_pending()` otomatis membatalkan order dan menghapus item kursi jika batas waktu terlewati sebelum dibayar, sehingga kursi kembali tersedia bagi penonton lain.
+Sistem dirancang dengan alur yang ringkas dan intuitif:
+1. **Pilih Film**: Memilih film yang sedang aktif tayang dan menentukan jadwal tayang (studio, tanggal, jam).
+2. **Pilih Kursi**: Memilih kursi pada grid studio yang terhubung langsung dengan ketersediaan kursi di database.
+3. **Pembayaran**: Mengisi data pemesan singkat dan memilih metode pembayaran (Transfer Bank, E-Wallet, Kartu). Setelah dikonfirmasi, sistem langsung menerbitkan kode booking resmi.
 
 ---
 
-## 🚀 Cara Menjalankan Aplikasi
+## Concurrency & Data Consistency
 
-### 1. Prasyarat
-- Python 3.10+
-- Node.js 18+ & npm
-- Git
+Untuk mencegah *double-booking* kursi ketika beberapa pengguna memesan kursi yang sama secara bersamaan:
+1. **Database Constraint**: Tabel `order_items` menerapkan constraint unik gabungan `(showtime_id, seat_id)`.
+2. **Atomic Transaction**: Jika terjadi konflik pesanan pada kursi yang sama, transaksi di-rollback dan API merespons dengan HTTP `409 Conflict`.
+3. **Holding Time**: Kursi di-hold saat pembuatan order dan otomatis kadaluarsa jika tidak dibayar dalam batas waktu yang ditentukan.
 
 ---
 
-### 2. Setup Backend
+## Cara Menjalankan
+
+### 1. Backend
 
 ```bash
-# 1. Masuk ke direktori backend
 cd backend
-
-# 2. Buat virtual environment & aktifkan
 python -m venv venv
 
-# Windows PowerShell:
-.\venv\Scripts\Activate.ps1
-# Atau Windows CMD:
-.\venv\Scripts\activate.bat
+# Aktivasi virtual environment (Windows)
+.\venv\Scripts\activate
 
-# 3. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 4. Konfigurasi file .env
-# Buat file .env di dalam folder backend/ dengan isi:
-DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<dbname>
-CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
-
-# 5. (Opsional) Jalankan database seed untuk data dummy film & jadwal
-python seed.py
-
-# 6. Jalankan server FastAPI
+# Jalankan server
 uvicorn app.main:app --reload --port 8000
 ```
-Backend akan aktif di `http://localhost:8000`. Dokumentasi interaktif Swagger UI tersedia di `http://localhost:8000/docs`.
+API docs tersedia di `http://localhost:8000/docs`.
 
----
-
-### 3. Setup Frontend
+### 2. Frontend
 
 ```bash
-# 1. Buka terminal baru dan masuk ke direktori frontend
 cd frontend
-
-# 2. Install dependencies
 npm install
-
-# 3. Konfigurasi file .env
-# Buat file .env di dalam folder frontend/ dengan isi:
-VITE_API_URL=http://localhost:8000/api
-
-# 4. Jalankan Vite development server
 npm run dev
 ```
-Buka browser di alamat yang ditampilkan Vite (biasanya `http://localhost:5173/` atau `http://localhost:5174/`).
+Aplikasi dapat diakses di browser melalui `http://localhost:5173/` (atau `http://localhost:5174/`).
 
 ---
 
-## 📑 Daftar Endpoint API
+## Endpoint API Utama
 
-### 🎬 Movies
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| `GET` | `/api/movies/` | Mendapatkan semua film yang berstatus aktif |
-| `GET` | `/api/movies/{id}` | Mendapatkan detail film beserta daftar jadwal tayang |
-
-### 💺 Showtimes & Seats
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| `GET` | `/api/showtimes/{id}/seats` | Mendapatkan layout kursi studio beserta status (`available` / `taken`) |
-
-### 🎟️ Orders & Payment
-| Method | Endpoint | Request Body | Deskripsi |
-|---|---|---|---|
-| `POST` | `/api/orders/` | `{ showtime_id, seat_ids, customer_name, customer_email, customer_phone }` | Membuat pesanan baru (Hold kursi 10 menit) |
-| `GET` | `/api/orders/{id}` | - | Mendapatkan ringkasan pesanan & sisa waktu pembayaran |
-| `DELETE` | `/api/orders/{id}` | - | Membatalkan pesanan pending dan melepas kursi |
-| `POST` | `/api/orders/{id}/pay` | `{ method: "transfer" \| "ewallet" \| "card" }` | Melakukan pembayaran dan mengubah status menjadi `paid` |
-
----
-
-## 🧪 Validasi Build
-Untuk memastikan kode siap produksi tanpa error:
-```bash
-cd frontend
-npm run build
-```
-Build bundle berhasil dengan status kode `0` dan type-check `vue-tsc` bersih.
+- `GET /api/movies/`: Daftar film yang aktif.
+- `GET /api/movies/{id}`: Detail film beserta jadwal tayang.
+- `GET /api/showtimes/{id}/seats`: Layout kursi dan status kursi (`available` / `taken`).
+- `POST /api/orders/`: Membuat pesanan dan menahan kursi.
+- `POST /api/orders/{id}/pay`: Memproses pembayaran order.

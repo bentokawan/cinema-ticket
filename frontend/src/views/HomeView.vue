@@ -32,13 +32,11 @@ onMounted(async () => {
         v-for="movie in movies" 
         :key="movie.id" 
         :to="`/movies/${movie.id}`"
-        class="group bg-[#1A1D27] rounded-xl overflow-hidden hover:ring-2 hover:ring-red-500 transition-all duration-300"
+        class="group bg-[#1A1D27] overflow-hidden hover:ring-2 hover:ring-red-500 transition-all duration-300"
       >
         <div class="aspect-[2/3] overflow-hidden bg-gray-800 relative">
           <img :src="movie.poster_url" :alt="movie.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-          <div class="absolute top-2 right-2 bg-black/70 backdrop-blur text-xs font-semibold px-2 py-1 rounded">
-            {{ movie.rating }}
-          </div>
+         
         </div>
         <div class="p-4">
           <h2 class="font-semibold text-lg truncate" :title="movie.title">{{ movie.title }}</h2>

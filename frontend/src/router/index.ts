@@ -2,10 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import MovieDetailView from '../views/MovieDetailView.vue'
 import SeatSelectionView from '../views/SeatSelectionView.vue'
-import CheckoutView from '../views/CheckoutView.vue'
-import OrderView from '../views/OrderView.vue'
 import PaymentView from '../views/PaymentView.vue'
-import SuccessView from '../views/SuccessView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,27 +23,11 @@ const router = createRouter({
       component: SeatSelectionView,
     },
     {
-      path: '/checkout',
-      name: 'checkout',
-      component: CheckoutView,
-    },
-    {
-      path: '/order/:id',
-      name: 'order',
-      component: OrderView,
-    },
-    {
-      path: '/payment/:id',
+      path: '/payment',
       name: 'payment',
       component: PaymentView,
-    },
-    {
-      path: '/success/:id',
-      name: 'success',
-      component: SuccessView,
     },
   ],
 })
 
 export default router
-

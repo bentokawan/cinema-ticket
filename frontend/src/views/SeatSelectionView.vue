@@ -29,9 +29,9 @@ onMounted(async () => {
   }
 })
 
-const lanjutCheckout = () => {
+const lanjutPembayaran = () => {
   if (store.selectedSeats.length > 0) {
-    router.push('/checkout')
+    router.push('/payment')
   }
 }
 </script>
@@ -84,7 +84,7 @@ const lanjutCheckout = () => {
       </div>
 
       <button 
-        @click="lanjutCheckout"
+        @click="lanjutPembayaran"
         :disabled="store.selectedSeats.length === 0"
         class="w-full py-3 rounded-lg font-semibold transition-all duration-300"
         :class="store.selectedSeats.length > 0 ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-700 text-gray-500 cursor-not-allowed'"
