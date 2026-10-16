@@ -78,4 +78,18 @@ def pay_order(db: Session, order_id:int, method:str) -> Order:
     db.commit()
     db.refresh(order)
     return order
+
+def cancel_order(db: Session, order_id: int) -> Order:
+    order = db.get(Order, order_id)
+    if not order:
+        raise HTTPException(404, "Order not found")
+    if order.status != "pending":
+        raise HTTPException(400, "Hanya pesanan pending yang dapat dibatalkan")
+    
+    order.status = "cancelled"
+    for item in list(order.items):
+        db.delete(item)
+    db.commit()
+    return order
+
     

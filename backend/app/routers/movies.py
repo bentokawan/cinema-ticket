@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from .. import models as m
 from ..database import get_db
 
-router = APIRouter(prefix="/movies",tags=["movies"])
+router = APIRouter(prefix="/api/movies", tags=["movies"])
 
 @router.get("/")
 def get_movies(db: Session = Depends(get_db)):

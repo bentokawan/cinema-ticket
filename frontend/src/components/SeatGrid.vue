@@ -11,8 +11,9 @@ const emit = defineEmits(['toggle'])
 const rows = computed(() => {
   const map: Record<string, any[]> = {}
   for (const s of props.seats) {
-    if (!map[s.row]) map[s.row] = []
-    map[s.row].push(s)
+    const list = map[s.row] || []
+    list.push(s)
+    map[s.row] = list
   }
   return Object.entries(map)
 })

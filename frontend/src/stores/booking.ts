@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 
 interface Seat {
     id: number
-    row_label: string
-    seat_number: number
+    row: string
+    number: number
     status: string
 }
 
@@ -15,6 +15,7 @@ export const useBooking = defineStore('booking', {
     }),
     getters: {
         totalPrice: (state) => (state.showtime?.price || 0) * state.selectedSeats.length,
+        selectedSeatIds: (state) => state.selectedSeats.map((s) => s.id),
     },
     actions: {
         toggleSeat(seat: Seat) {
