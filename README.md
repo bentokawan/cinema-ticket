@@ -1,71 +1,64 @@
-# Cinema Ticket Booking System
+# Cinema Ticket Booking
 
-Aplikasi pemesanan tiket bioskop sederhana dengan fokus pada validasi data dan penanganan *concurrency* di sisi backend.
+A fullstack cinema ticket booking application built with FastAPI and Vue 3.
 
-- **Backend**: FastAPI, SQLAlchemy 2.0, PostgreSQL (Supabase Cloud)
-- **Frontend**: Vue 3, Vite, TailwindCSS
-
----
-
-## Substansi Teknis & Concurrency
-
-Tantangan utama sistem pemesanan tiket adalah mencegah **double-booking** (dua pengguna memesan kursi yang sama secara bersamaan). Sistem ini menanganinya melalui:
-
-1. **Database Constraint**:  
-   Tabel `order_items` menerapkan `UniqueConstraint("showtime_id", "seat_id")`.
-2. **Atomic Rollback & Status 409**:  
-   Jika terjadi bentrokan saat transaksi disimpan, database menolak operasi tersebut dan FastAPI me-rollback transaksi lalu mengembalikan status `HTTP 409 Conflict`.
-3. **Mekanisme Hold Timeout (10 Menit)**:  
-   Ketika order dibuat, status order adalah `pending` selama 10 menit. Jika tidak diselesaikan pembayarannya, kursi otomatis dirilis kembali untuk penonton lain.
+> **Note:** The application is already connected to a hosted PostgreSQL database on Supabase Cloud. No local database installation is required.
 
 ---
 
-## Cara Menjalankan
+## Getting Started
 
-> **Catatan Database**: Proyek ini sudah terhubung ke database **PostgreSQL di Supabase Cloud**. Anda **tidak perlu menginstall atau membuat database PostgreSQL lokal**.
-
-### 1. Jalankan Backend
+### 1. Backend (FastAPI)
 
 ```bash
 cd backend
 
-# Buat & aktifkan virtual environment (opsional tapi direkomendasikan)
+# Create and activate virtual environment
 python -m venv venv
-.\venv\Scripts\activate   # Windows
-# source venv/bin/activate # Linux/macOS
+# On Windows:
+.\venv\Scripts\activate
+# On Linux/macOS:
+# source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Pastikan file .env ada (sudah disediakan default koneksi Supabase)
-# Jika belum ada, salin dari .env.example:
+# Ensure .env is present (already pre-configured with Supabase Cloud DB)
+# If missing, copy from example:
 cp .env.example .env
 
-# Jalankan server API
+# Run the API server
 uvicorn app.main:app --reload --port 8000
 ```
-API docs (Swagger) aktif di `http://localhost:8000/docs`.
+
+The API will be available at `http://localhost:8000`.  
+Interactive API documentation (Swagger UI): `http://localhost:8000/docs`.
 
 ---
 
-### 2. Jalankan Frontend
+### 2. Frontend (Vue 3)
+
+Open a new terminal window:
 
 ```bash
 cd frontend
 
-# Install dependencies & jalankan dev server
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
-Buka browser di `http://localhost:5173/` (atau `http://localhost:5174/`).
+
+Open your browser at `http://localhost:5173/` (or `http://localhost:5174/`).
 
 ---
 
-## Endpoint API
+## API Endpoints
 
-| Method | Endpoint | Fungsi |
+| Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/movies/` | Mengambil daftar film aktif beserta jadwal penayangan |
-| `GET` | `/api/showtimes/{id}/seats` | Mengambil 5 kursi studio beserta status (`available` / `taken`) |
-| `POST` | `/api/orders/` | Membuat pesanan baru & menahan kursi (hold) |
-| `POST` | `/api/orders/{id}/pay` | Eksekusi pembayaran (`qris` / `bca`) |
+| `GET` | `/api/movies/` | List all active movies and schedules |
+| `GET` | `/api/showtimes/{id}/seats` | Get seat layout and availability status |
+| `POST` | `/api/orders/` | Create a booking order (hold seats) |
+| `POST` | `/api/orders/{id}/pay` | Process payment (`qris` or `bca`) |
