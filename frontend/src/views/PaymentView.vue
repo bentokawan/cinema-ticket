@@ -13,7 +13,7 @@ const form = ref({
   phone: ''
 })
 
-const selectedMethod = ref<'transfer' | 'ewallet' | 'card'>('transfer')
+const selectedMethod = ref<'qris' | 'bca'>('qris')
 const loading = ref(false)
 const error = ref('')
 const successOrder = ref<any>(null)
@@ -40,12 +40,12 @@ const submitPayment = async () => {
     const createRes = await api.post('/orders/', orderPayload)
     const orderId = createRes.data.id
 
-    // 2. Eksekusi pembayaran
+    // 2. Eksekusi pembayaran langsung
     await api.post(`/orders/${orderId}/pay`, {
       method: selectedMethod.value
     })
 
-    // 3. Ambil data order final
+    // 3. Ambil data order final untuk bukti konfirmasi
     const finalRes = await api.get(`/orders/${orderId}`)
     successOrder.value = finalRes.data
 
@@ -72,7 +72,7 @@ const handleReset = () => {
 
 <template>
   <div class="max-w-3xl mx-auto py-6">
-    <!-- Success State: Tampilan Ringkas Bukti Pemesanan -->
+    <!-- State 1: Konfirmasi Berhasil -->
     <div v-if="successOrder" class="bg-[#1A1D27] p-8 rounded-2xl border border-white/10 space-y-6 text-center">
       <div class="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto border border-green-500/30">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,8 +81,8 @@ const handleReset = () => {
       </div>
 
       <div class="space-y-1">
-        <h1 class="text-2xl font-bold text-white">Pembayaran Berhasil</h1>
-        <p class="text-sm text-gray-400">Tiket bioskop Anda telah terkonfirmasi.</p>
+        <h1 class="text-2xl font-bold text-white">Pembayaran Berhasil!</h1>
+        <p class="text-sm text-gray-400">Pemesanan tiket Anda telah terkonfirmasi.</p>
       </div>
 
       <div class="bg-[#0F1117] p-6 rounded-xl border border-white/5 text-left space-y-4 max-w-md mx-auto">
@@ -105,6 +105,10 @@ const handleReset = () => {
             <span class="font-semibold text-red-400">{{ successOrder.seats?.join(', ') }}</span>
           </div>
           <div class="flex justify-between">
+            <span class="text-gray-400">Metode Bayar</span>
+            <span class="text-white uppercase font-semibold">{{ successOrder.payment_method }}</span>
+          </div>
+          <div class="flex justify-between">
             <span class="text-gray-400">Pemesan</span>
             <span class="text-white">{{ successOrder.customer_name }}</span>
           </div>
@@ -119,11 +123,11 @@ const handleReset = () => {
         @click="handleReset"
         class="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors text-sm"
       >
-        Pesan Tiket Lain
+        Selesai / Pesan Tiket Lain
       </button>
     </div>
 
-    <!-- Payment Flow State -->
+    <!-- State 2: Form Pembayaran (QRIS & BCA) -->
     <div v-else-if="store.movie" class="space-y-6">
       <div class="flex items-center gap-2 border-b border-white/10 pb-4">
         <button 
@@ -140,7 +144,7 @@ const handleReset = () => {
       </div>
 
       <form @submit.prevent="submitPayment" class="grid md:grid-cols-5 gap-6">
-        <!-- Form Pemesan & Metode Bayar (3 Kolom) -->
+        <!-- Form Pemesan & Pilihan Bayar (3 Kolom) -->
         <div class="md:col-span-3 space-y-6">
           <!-- Data Pemesan -->
           <div class="bg-[#1A1D27] p-6 rounded-2xl border border-white/5 space-y-4">
@@ -184,42 +188,39 @@ const handleReset = () => {
             </div>
           </div>
 
-          <!-- Pilihan Metode Pembayaran -->
+          <!-- Pilihan Metode Pembayaran (Hanya QRIS & BCA) -->
           <div class="bg-[#1A1D27] p-6 rounded-2xl border border-white/5 space-y-3">
             <h2 class="text-base font-semibold text-white">Metode Pembayaran</h2>
 
-            <div class="space-y-2">
+            <div class="space-y-3">
+              <!-- QRIS -->
               <label 
-                class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
-                :class="selectedMethod === 'transfer' ? 'bg-red-600/10 border-red-500 text-white' : 'bg-[#0F1117] border-white/10 text-gray-300 hover:border-white/20'"
+                class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all"
+                :class="selectedMethod === 'qris' ? 'bg-red-600/10 border-red-500 text-white' : 'bg-[#0F1117] border-white/10 text-gray-300 hover:border-white/20'"
               >
                 <div class="flex items-center gap-3">
-                  <input type="radio" value="transfer" v-model="selectedMethod" class="text-red-500 focus:ring-red-500" />
-                  <span class="text-sm font-medium">Transfer Bank (Virtual Account)</span>
+                  <input type="radio" value="qris" v-model="selectedMethod" class="text-red-500 focus:ring-red-500" />
+                  <div>
+                    <span class="text-sm font-bold block">QRIS</span>
+                    <span class="text-xs text-gray-400">Pembayaran instan dengan scan QRIS</span>
+                  </div>
                 </div>
-                <span class="text-xs text-gray-400">BCA, Mandiri, BNI, BRI</span>
+                <span class="text-xs font-semibold bg-white/10 px-2.5 py-1 rounded text-gray-300">Instan</span>
               </label>
 
+              <!-- BCA -->
               <label 
-                class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
-                :class="selectedMethod === 'ewallet' ? 'bg-red-600/10 border-red-500 text-white' : 'bg-[#0F1117] border-white/10 text-gray-300 hover:border-white/20'"
+                class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all"
+                :class="selectedMethod === 'bca' ? 'bg-red-600/10 border-red-500 text-white' : 'bg-[#0F1117] border-white/10 text-gray-300 hover:border-white/20'"
               >
                 <div class="flex items-center gap-3">
-                  <input type="radio" value="ewallet" v-model="selectedMethod" class="text-red-500 focus:ring-red-500" />
-                  <span class="text-sm font-medium">E-Wallet / QRIS</span>
+                  <input type="radio" value="bca" v-model="selectedMethod" class="text-red-500 focus:ring-red-500" />
+                  <div>
+                    <span class="text-sm font-bold block">BCA (Virtual Account)</span>
+                    <span class="text-xs text-gray-400">Transfer bank otomatis tanpa verifikasi manual</span>
+                  </div>
                 </div>
-                <span class="text-xs text-gray-400">GoPay, OVO, DANA</span>
-              </label>
-
-              <label 
-                class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
-                :class="selectedMethod === 'card' ? 'bg-red-600/10 border-red-500 text-white' : 'bg-[#0F1117] border-white/10 text-gray-300 hover:border-white/20'"
-              >
-                <div class="flex items-center gap-3">
-                  <input type="radio" value="card" v-model="selectedMethod" class="text-red-500 focus:ring-red-500" />
-                  <span class="text-sm font-medium">Kartu Kredit / Debit</span>
-                </div>
-                <span class="text-xs text-gray-400">Visa, Mastercard</span>
+                <span class="text-xs font-semibold bg-white/10 px-2.5 py-1 rounded text-gray-300">Otomatis</span>
               </label>
             </div>
           </div>
@@ -250,6 +251,10 @@ const handleReset = () => {
               <div class="flex justify-between">
                 <span class="text-gray-400">Harga Satuan</span>
                 <span>{{ formatRupiah(store.showtime.price) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Metode</span>
+                <span class="uppercase font-semibold text-white">{{ selectedMethod }}</span>
               </div>
             </div>
 

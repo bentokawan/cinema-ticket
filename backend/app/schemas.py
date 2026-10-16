@@ -9,4 +9,4 @@ class OrderCreate(BaseModel):
     customer_phone: str = Field(...,min_length=7,max_length=13)
 
 class PayRequest(BaseModel):
-    method: Literal["transfer","card","ewallet"]
+    method: Literal["qris", "bca", "transfer", "ewallet", "card"]

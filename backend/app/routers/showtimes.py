@@ -13,7 +13,7 @@ def get_seats(showtime_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "Showtime not found")
     
     taken_seats = {row.seat_id for row in db.query(m.OrderItem.seat_id).filter(m.OrderItem.showtime_id == showtime_id)}
-    seats = db.query(m.Seat).filter(m.Seat.studio_id == st.studio_id).order_by(m.Seat.row_label, m.Seat.seat_number).all()
+    seats = db.query(m.Seat).filter(m.Seat.studio_id == st.studio_id).order_by(m.Seat.row_label, m.Seat.seat_number).limit(5).all()
     
     return [
         {
