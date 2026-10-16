@@ -2,7 +2,12 @@
 
 A fullstack cinema ticket booking application built with FastAPI and Vue 3.
 
-> **Note:** The application is already connected to a hosted PostgreSQL database on Supabase Cloud. No local database installation is required.
+## Database (Supabase Integration)
+
+The application uses **PostgreSQL** hosted on **Supabase Cloud**.
+- Pre-configured connection string is provided in `backend/.env` (and `backend/.env.example`).
+- **No local PostgreSQL setup is required** — the application connects directly to the cloud database with ready-to-use seed data.
+- *(Optional)* If you wish to use your own database, update `DATABASE_URL` in `backend/.env` and run `python seed.py` to initialize tables and dummy data.
 
 ---
 
