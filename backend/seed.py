@@ -5,20 +5,20 @@ from app.database import Base, SessionLocal, engine
 
 
 FILMS = [
-    {"Dilan 1990","Romance, Drama", 128, "13+"},
-    {"Ada Apa Dengan Cinta?","Romance, Drama", 117, "13+"},
-    {"Laskar Pelangi","Drama", 124, "SU"},
-    {"Ayat-Ayat Cinta","Romance", 126, "13+"},
-    {"Habibie & Ainun","Biography, Drama", 123, "13+"},
-    {"Koala Kumal","Comedy, Romance", 116, "13+"},
+    ("Dilan 1990","Romance, Drama", 128, "13+"),
+    ("Ada Apa Dengan Cinta?","Romance, Drama", 117, "13+"),
+    ("Laskar Pelangi","Drama", 124, "SU"),
+    ("Ayat-Ayat Cinta","Romance", 126, "13+"),
+    ("Habibie & Ainun","Biography, Drama", 123, "13+"),
+    ("Koala Kumal","Comedy, Romance", 116, "13+"),
 ]
 
 def seed():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     
-    if db.query(m.Movie).count:
-        print("Seeding database...")
+    if db.query(m.Movie).count() > 0:
+        print("Database already seeded.")
         return
     
     print("Creating Studios...")
@@ -54,7 +54,7 @@ def seed():
             for hour in (13,16,19,21):
                 db.add(
                     m.Showtime(
-                        movie_id=movies.id,
+                        movie_id=movie.id,
                         studio_id=studios[idx % 2].id,
                         start_time=today + timedelta(days=day,hours=hour),
                         price=random.choice([45000,55000,65000])
